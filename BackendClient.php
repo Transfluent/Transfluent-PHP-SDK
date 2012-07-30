@@ -1,6 +1,11 @@
 <?php
 
 namespace Transfluent {
+    /**
+     * Transfluent Backend API client
+     * Version 1.0
+     * @see https://github.com/Transfluent/Transfluent-Backend-API-client
+     */
     class BackendClient {
         const HTTP_GET = 'GET';
         const HTTP_POST = 'POST';
@@ -104,10 +109,24 @@ namespace Transfluent {
             return $response_obj['response'];
         }
 
+        /**
+         * /languages/ can be called without token&any authentication, we can call Request directly
+         *
+         * @throws \Exception
+         * @return mixed
+         */
         public function Languages() {
             return $this->Request(__FUNCTION__);
         }
 
+        /**
+         * /file/status/ requires token, use CallApi-method which automatically handles token&authentication issues
+         *
+         * @throws \Exception
+         * @param $identifier
+         * @param $language
+         * @return mixed
+         */
         public function FileStatus($identifier, $language) {
             return $this->CallApi(__FUNCTION__, self::HTTP_GET, array('identifier' => $identifier, 'language' => $language));
         }
