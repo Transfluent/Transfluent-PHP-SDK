@@ -7,7 +7,7 @@ Transfluent Backend API client
 
 Example how to retrieve languages:
 ```php
-&lt;?php
+<?php
 $client = new Transfluent\BackendClient('example@example.org', 'my-password');
 try {
     $languages = $client->Languages();
@@ -19,6 +19,7 @@ try {
  **/
 echo "Language id #1 is " . $languages[0][1]['name'] . PHP_EOL;
 ```
+
 ### About authentication tokens ###
 Either specify email and password on object construct or retrieve a token, save it somewhere safe and use SetToken()-method to set the token. Latter method is recommended if your code constantly creates new instances of backend client.
 
