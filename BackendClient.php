@@ -3,7 +3,7 @@
 namespace Transfluent {
     /**
      * Transfluent Backend API client
-     * Version 1.0
+     * Version 1.1
      * @see https://github.com/Transfluent/Transfluent-Backend-API-client
      */
     class BackendClient {
@@ -131,6 +131,10 @@ namespace Transfluent {
             return $this->CallApi(__FUNCTION__, self::HTTP_GET, array('identifier' => $identifier, 'language' => $language));
         }
 
+        public function FileRead($identifier, $language) {
+            return $this->CallApi(__FUNCTION__, self::HTTP_GET, array('identifier' => $identifier, 'language' => $language));
+        }
+
         /**
          * Return true if file is completely translated, otherwise returns translation completion percentage
          *
@@ -144,6 +148,58 @@ namespace Transfluent {
                 return true;
             }
             return $response['progress'];
+        }
+
+        private function FileSave($identifier, $language, $format, $file_name, $type) {
+            if (!is_file($file_name)) {
+                throw new \Exception('File not found!');
+            }
+            $file_content = base64_encode(file_get_contents($file_name));
+
+            $response = $this->Request(__FUNCTION__, 'POST', array('identifier' => $identifier, 'language' => $language, 'format' => $format, 'content' => $file_content, 'type' => $type));
+            if (!$response->word_count) {
+                throw new \Exception('Response does not comply expected form!');
+            }
+            return $response;
+        }
+
+        public function SaveMooToolsLocaleFile($identifier, $language, $file) {
+            return $this->FileSave($identifier, $language, 'UTF-8', $file, 'MooTools-locale');
+        }
+
+        public function SaveIosStringsFile($identifier, $language, $file) {
+            return $this->FileSave($identifier, $language, 'UTF-16', $file, 'iOS-strings');
+        }
+
+        public function SaveAndroidStringsFile($identifier, $language, $file) {
+            return $this->FileSave($identifier, $language, 'UTF-8', $file, 'Android-strings');
+        }
+
+        public function SaveAndroidArraysFile($identifier, $language, $file) {
+            return $this->FileSave($identifier, $language, 'UTF-8', $file, 'Android-arrays');
+        }
+
+        /**
+         * @param $identifier - File identifier (e.g. /foobar/foo.xml)
+         * @param $language - Language id, numeric, e.g. "Finnish = 11"
+         * @param array $target_languages - Array of language ids to translate file into
+         * @param string $comment - Context comment or further information to the translator
+         * @param string $callback_url - A callback URL which will receive a GET request when translation is completed
+         * @return array
+         * @throws \Exception
+         */
+        public function FileTranslate($identifier, $language, array $target_languages, $comment = '', $callback_url = '') {
+            if (!is_array($target_languages)) {
+                throw new \Exception('Target languages MUST be provided as an array!');
+            }
+            if (!is_numeric($language)) {
+                throw new \Exception('Language id MUST be numeric');
+            }
+            $response = $this->Request(__FUNCTION__, 'POST', array('identifier' => $identifier, 'language' => $language, 'target_languages' => json_encode($target_languages), 'comment' => $comment, 'callback_url' => $callback_url));
+            if (!$response->word_count) {
+                throw new \Exception('Response does not comply expected form!');
+            }
+            return $response;
         }
     }
 }
