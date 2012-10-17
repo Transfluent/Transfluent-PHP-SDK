@@ -3,7 +3,7 @@
 namespace Transfluent {
     /**
      * Transfluent Backend API client
-     * Version 1.1
+     * Version 1.11
      * @see https://github.com/Transfluent/Transfluent-Backend-API-client
      */
     class BackendClient {
@@ -156,7 +156,7 @@ namespace Transfluent {
             }
             $file_content = base64_encode(file_get_contents($file_name));
 
-            $response = $this->Request(__FUNCTION__, 'POST', array('identifier' => $identifier, 'language' => $language, 'format' => $format, 'content' => $file_content, 'type' => $type));
+            $response = $this->CallApi(__FUNCTION__, 'POST', array('identifier' => $identifier, 'language' => $language, 'format' => $format, 'content' => $file_content, 'type' => $type));
             if (!$response->word_count) {
                 throw new \Exception('Response does not comply expected form!');
             }
@@ -195,7 +195,7 @@ namespace Transfluent {
             if (!is_numeric($language)) {
                 throw new \Exception('Language id MUST be numeric');
             }
-            $response = $this->Request(__FUNCTION__, 'POST', array('identifier' => $identifier, 'language' => $language, 'target_languages' => json_encode($target_languages), 'comment' => $comment, 'callback_url' => $callback_url));
+            $response = $this->CallApi(__FUNCTION__, 'POST', array('identifier' => $identifier, 'language' => $language, 'target_languages' => json_encode($target_languages), 'comment' => $comment, 'callback_url' => $callback_url));
             if (!$response->word_count) {
                 throw new \Exception('Response does not comply expected form!');
             }
