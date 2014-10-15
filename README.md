@@ -1,9 +1,9 @@
 Transfluent Backend API client
 ==============================
 
-  * Version: 1.12
+  * Version: 1.13
   * Requires: PHP 5.3 or newer, cURL-extension for PHP
-  * API documentation: http://www.transfluent.com/backend-api/
+  * API documentation: http://transfluent.github.io
 
 ### Quick overview using code examples how to order translations for a resource file ###
 
@@ -13,9 +13,9 @@ Example how to order translations for a resource file:
 $client = new Transfluent\BackendClient('example@example.org', 'my-password');
 try {
     $response = $client->SaveIosStringsFile('my-project/Localizable.strings', 1, '/home/john/work/my-project/resources/Localizable.strings');
-    echo "The file contains {$response->word_count} words." . PHP_EOL;
-    $response = $client->FileTranslate('my-project/Localizable.strings', 1, array(11), 'This is description of My-project etc.', 'http://www.example.org/callback-me.php');
-    echo "{$response->word_count} words (for all target languages) were ordered." . PHP_EOL;
+    echo "The file contains {$response['word_count']} words." . PHP_EOL;
+    $response = $client->FileTranslate('my-project/Localizable.strings', 1, array(11), 'This is description of My-project etc.', 'http://www.example.org/callback-me.php', BackendClient::LEVEL_PRO_PROOF_READ);
+    echo "{$response['word_count']} words (for all target languages) were ordered." . PHP_EOL;
 } catch (Exception $e) {
     error_log($e->getMessage());
     exit;
