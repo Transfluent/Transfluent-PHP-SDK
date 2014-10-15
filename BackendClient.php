@@ -3,12 +3,16 @@
 namespace Transfluent {
     /**
      * Transfluent Backend API client
-     * Version 1.12
+     * Version 1.13
      * @see https://github.com/Transfluent/Transfluent-Backend-API-client
      */
     class BackendClient {
         const HTTP_GET = 'GET';
         const HTTP_POST = 'POST';
+
+        const LEVEL_STANDARD = 1;
+        const LEVEL_PRO = 2;
+        const LEVEL_PRO_PROOF_READ = 3;
 
         static $API_URL;
         private $email;
@@ -54,10 +58,10 @@ namespace Transfluent {
 
         private function Authenticate() {
             $response = $this->Request(__FUNCTION__, 'POST', array('email' => $this->email, 'password' => $this->password));
-            if (!$response->token) {
+            if (!$response['token']) {
                 throw new \Exception('Could not authenticate with API!');
             }
-            $this->token = $response->token;
+            $this->token = $response['token'];
         }
 
         private function Request($method_name, $method = self::HTTP_GET, $payload = array()) {
@@ -157,7 +161,7 @@ namespace Transfluent {
             $file_content = base64_encode(file_get_contents($file_name));
 
             $response = $this->CallApi(__FUNCTION__, 'POST', array('identifier' => $identifier, 'language' => $language, 'format' => $format, 'content' => $file_content, 'type' => $type));
-            if (!$response->word_count) {
+            if (!$response['word_count']) {
                 throw new \Exception('Response does not comply expected form!');
             }
             return $response;
@@ -185,18 +189,24 @@ namespace Transfluent {
          * @param array $target_languages - Array of language ids to translate file into
          * @param string $comment - Context comment or further information to the translator
          * @param string $callback_url - A callback URL which will receive a GET request when translation is completed
+         * @param $level - Translation level, one of LEVEL_STANDARD, LEVEL_PRO, LEVEL_PRO_PROOF_READ
          * @return array
          * @throws \Exception
          */
-        public function FileTranslate($identifier, $language, array $target_languages, $comment = '', $callback_url = '') {
+        public function FileTranslate($identifier, $language, array $target_languages, $comment = '', $callback_url = '', $level = self::LEVEL_PRO_PROOF_READ) {
             if (!is_array($target_languages)) {
                 throw new \Exception('Target languages MUST be provided as an array!');
             }
             if (!is_numeric($language)) {
                 throw new \Exception('Language id MUST be numeric');
             }
-            $response = $this->CallApi(__FUNCTION__, 'POST', array('identifier' => $identifier, 'language' => $language, 'target_languages' => json_encode($target_languages), 'comment' => $comment, 'callback_url' => $callback_url));
-            if (!$response->word_count) {
+
+            if (!is_numeric($level)) {
+                throw new \Exception('Level MUST be numeric');
+            }
+
+            $response = $this->CallApi(__FUNCTION__, 'POST', array('identifier' => $identifier, 'language' => $language, 'target_languages' => json_encode($target_languages), 'comment' => $comment, 'callback_url' => $callback_url, 'level' => $level));
+            if (!$response['word_count']) {
                 throw new \Exception('Response does not comply expected form!');
             }
             return $response;
