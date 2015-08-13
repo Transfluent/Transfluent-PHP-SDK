@@ -3,37 +3,40 @@
 namespace Transfluent {
     /**
      * Transfluent Backend API client
-     * Version 1.13
+     * Version 2.0-ALPHA
      * @see https://github.com/Transfluent/Transfluent-Backend-API-client
      */
     class BackendClient {
         const HTTP_GET = 'GET';
         const HTTP_POST = 'POST';
 
-        const LEVEL_STANDARD = 1;
-        const LEVEL_PRO = 2;
-        const LEVEL_PRO_PROOF_READ = 3;
+        const LEVEL_ECONOMY = 'economy';
+        const LEVEL_BUSINESS = 'business';
 
         static $API_URL;
+        static $API_V3_URL;
+        private $_sandbox_mode = false;
         private $email;
         private $password;
 
         private $token = null;
 
-        public function __construct($email, $password, $in_sandbox_mode = false) {
+        public function __construct($email = null, $password = null, $in_sandbox_mode = false) {
             $this->SystemCheck();
             $this->email = $email;
             $this->password = $password;
             if ($in_sandbox_mode) {
-                self::$API_URL = 'https://sandbox.transfluent.com/v2/';
-                throw new \Exception('Unfortunately sandbox for API is not public, yet. Sorry!'); // @todo: Implement when sandbox is public
+                self::$API_URL = 'https://public-api.local.dev/v2/';
+                self::$API_V3_URL = 'https://public-api.local.dev/';
+                $this->_sandbox_mode = true;
             } else {
                 self::$API_URL = 'https://transfluent.com/v2/';
+                self::$API_V3_URL = 'https://transfluent.com/';
             }
         }
 
-        private function UriFromMethod($method_name) {
-            return strtolower(preg_replace("/(?!^)([A-Z]{1}[a-z0-9]{1,})/", '/$1', $method_name)) . '/';
+        private function UriFromMethod($method_name, $api_version) {
+            return strtolower(preg_replace("/(?!^)([A-Z]{1}[a-z0-9]{1,})/", '/$1', $method_name)) . ($api_version == 'v3' ? '' : '/');
         }
 
         private function SystemCheck() {
@@ -56,24 +59,39 @@ namespace Transfluent {
             $this->token = $token;
         }
 
-        private function Authenticate() {
-            $response = $this->Request(__FUNCTION__, 'POST', array('email' => $this->email, 'password' => $this->password));
-            if (!$response['token']) {
-                throw new \Exception('Could not authenticate with API!');
+        public function GetToken() {
+            if (is_null($this->token)) {
+                $this->Authenticate();
             }
-            $this->token = $response['token'];
+            return $this->token;
         }
 
-        private function Request($method_name, $method = self::HTTP_GET, $payload = array()) {
-            $uri = $this->UriFromMethod($method_name);
+        private function Authenticate() {
+            $response = $this->Request(__FUNCTION__, 'POST', array('email' => $this->email, 'password' => $this->password), 'v3');
+            if (!$response) {
+                throw new \Exception('Could not authenticate with API!');
+            }
+            $this->token = $response;
+        }
 
-            $curl_handle = curl_init(self::$API_URL . $uri);
+        private function Request($method_name, $method = self::HTTP_GET, $payload = array(), $api_version = 'v2') {
+            switch ($api_version) {
+                case 'v2':
+                    $api_url = self::$API_URL;
+                    break;
+                case 'v3':
+                    $api_url = self::$API_V3_URL;
+                    break;
+            }
+            $uri = $this->UriFromMethod($method_name, $api_version);
+
+            $curl_handle = curl_init($api_url . $uri);
             if (!$curl_handle) {
                 throw new \Exception('Could not initialize cURL!');
             }
             switch (strtoupper($method)) {
                 case self::HTTP_GET:
-                    $url = self::$API_URL . $uri . '?';
+                    $url = $api_url . $uri . '?';
                     $url_parameters = array();
                     foreach ($payload AS $key => $value) {
                         $url_parameters[] = $key . '=' . urlencode($value);
@@ -84,7 +102,16 @@ namespace Transfluent {
                 case self::HTTP_POST:
                     curl_setopt($curl_handle, CURLOPT_POST, TRUE);
                     if (!empty($payload)) {
-                        curl_setopt($curl_handle, CURLOPT_POSTFIELDS, $payload);
+                        if ($api_version == 'v3') {
+                            $json_payload = json_encode($payload);
+                            curl_setopt($curl_handle, CURLOPT_POSTFIELDS, $json_payload);
+                            curl_setopt($curl_handle, CURLOPT_HTTPHEADER, array(
+                                    'Content-Type: application/json',
+                                    'Content-Length: ' . strlen($json_payload))
+                            );
+                        } else {
+                            curl_setopt($curl_handle, CURLOPT_POSTFIELDS, $payload);
+                        }
                     }
                     break;
                 default:
@@ -92,6 +119,10 @@ namespace Transfluent {
             }
             curl_setopt($curl_handle, CURLOPT_FOLLOWLOCATION, 1);
             curl_setopt($curl_handle, CURLOPT_RETURNTRANSFER, 1);
+            if ($this->_sandbox_mode) {
+                curl_setopt ($curl_handle, CURLOPT_SSL_VERIFYHOST, 0);
+                curl_setopt ($curl_handle, CURLOPT_SSL_VERIFYPEER, 0);
+            }
             $response = curl_exec($curl_handle);
             if (!$response) {
                 throw new \Exception('Failed to connect with Transfluent\'s API. cURL error: ' . curl_error($curl_handle));
@@ -104,6 +135,24 @@ namespace Transfluent {
             if (!$response_obj) {
                 throw new \Exception('Could not parse API\'s response: ' . $response);
             }
+            if ($api_version == 'v3') {
+                // v3 Response processing
+                $http_code = curl_getinfo($curl_handle, CURLINFO_HTTP_CODE);
+                switch ($http_code) {
+                    case 200:
+                        return $response_obj;
+                    case 400:
+                    case 401:
+                    case 403:
+                    case 500:
+                    default:
+                        if (!isset($response_obj['type'])) {
+                            throw new \Exception('API returned unexpected response: ' . $response);
+                        }
+                        throw new \Exception('API returned an error #' . $response_obj['type'] . ': ' . $response_obj['message'] . '.');
+                }
+            }
+            // v2 Response processing
             if ($response_obj['status'] == 'ERROR') {
                 throw new \Exception('API returned an error #' . $response_obj['error']['type'] . ': ' . $response_obj['error']['message'] . '. Error description: ' . $response_obj['response']);
             }
@@ -185,24 +234,24 @@ namespace Transfluent {
 
         /**
          * @param $identifier - File identifier (e.g. /foobar/foo.xml)
-         * @param $language - Language id, numeric, e.g. "Finnish = 11"
-         * @param array $target_languages - Array of language ids to translate file into
+         * @param $language - Language code, e.g. English en-gb
+         * @param array $target_languages - Array of language codes to translate file into
          * @param string $comment - Context comment or further information to the translator
          * @param string $callback_url - A callback URL which will receive a GET request when translation is completed
-         * @param $level - Translation level, one of LEVEL_STANDARD, LEVEL_PRO, LEVEL_PRO_PROOF_READ
+         * @param $level - Translation level
          * @return array
          * @throws \Exception
          */
-        public function FileTranslate($identifier, $language, array $target_languages, $comment = '', $callback_url = '', $level = self::LEVEL_PRO_PROOF_READ) {
+        public function FileTranslate($identifier, $language, array $target_languages, $comment = '', $callback_url = '', $level = self::LEVEL_BUSINESS) {
             if (!is_array($target_languages)) {
                 throw new \Exception('Target languages MUST be provided as an array!');
             }
-            if (!is_numeric($language)) {
-                throw new \Exception('Language id MUST be numeric');
+            if (!$language) {
+                throw new \Exception('Language id MUST be provided!');
             }
 
-            if (!is_numeric($level)) {
-                throw new \Exception('Level MUST be numeric');
+            if (!$level) {
+                throw new \Exception('Level MUST be provided!');
             }
 
             $response = $this->CallApi(__FUNCTION__, 'POST', array('identifier' => $identifier, 'language' => $language, 'target_languages' => json_encode($target_languages), 'comment' => $comment, 'callback_url' => $callback_url, 'level' => $level));
