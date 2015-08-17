@@ -184,6 +184,14 @@ namespace Transfluent {
             return $this->CallApi(__FUNCTION__, self::HTTP_GET, array('identifier' => $identifier, 'language' => $language));
         }
 
+        /**
+         * Retrieve translated file
+         *
+         * @throws \Exception
+         * @param $identifier
+         * @param $language
+         * @return mixed
+         */
         public function FileRead($identifier, $language) {
             return $this->CallApi(__FUNCTION__, self::HTTP_GET, array('identifier' => $identifier, 'language' => $language));
         }
@@ -230,6 +238,10 @@ namespace Transfluent {
 
         public function SaveAndroidArraysFile($identifier, $language, $file) {
             return $this->FileSave($identifier, $language, 'UTF-8', $file, 'Android-arrays');
+        }
+
+        public function SaveJsonFile($identifier, $language, $file) {
+            return $this->FileSave($identifier, $language, 'UTF-8', $file, 'json-file');
         }
 
         /**
