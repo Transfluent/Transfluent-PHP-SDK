@@ -3,7 +3,7 @@
 namespace Transfluent {
     /**
      * Transfluent Backend API client
-     * Version 2.0-ALPHA
+     * Version 2.0
      * @see https://github.com/Transfluent/Transfluent-Backend-API-client
      */
     class BackendClient {
