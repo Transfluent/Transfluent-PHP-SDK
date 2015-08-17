@@ -301,6 +301,32 @@ namespace Transfluent {
             return $response;
         }
 
+        public function TextsTranslate($group_id = '', $language_code, $text_ids, $target_languages, $level = self::LEVEL_BUSINESS, $comment = '', $callback_url = null) {
+            if (!is_array($text_ids) || empty($text_ids)) {
+                throw new \Exception('Text ids to translate MUST be provided!');
+            }
+            foreach ($text_ids AS $data) {
+                if (!isset($data['id'])) {
+                    throw new \Exception('Text ids to translate MUST be provided!');
+                }
+            }
+            if (!is_array($target_languages)) {
+                throw new \Exception('Always provide target languages as an array!');
+            }
+            $response = $this->CallApi(__FUNCTION__, 'POST',
+                array(
+                    'group_id' => $group_id,
+                    'source_language' => $language_code,
+                    'texts' => $text_ids,
+                    'level' => $level,
+                    'target_languages' => $target_languages,
+                    'comment' => $comment,
+                    'callback_url' => $callback_url
+                )
+            );
+            return $response;
+        }
+
         /**
          * Retrieve translated text
          *
