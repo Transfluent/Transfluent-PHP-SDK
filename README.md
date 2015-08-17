@@ -1,4 +1,4 @@
-Transfluent Backend API client
+Transfluent PHP SDK
 ==============================
 
   * Version: 2.0
