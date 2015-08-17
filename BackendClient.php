@@ -339,5 +339,18 @@ namespace Transfluent {
         public function Text($text_id, $language_code, $group_id = null) {
             return $this->CallApi(__FUNCTION__, self::HTTP_GET, array('text_id' => $text_id, 'language' => $language_code, 'group_id' => $group_id));
         }
+
+        /**
+         * Retrieve translation status of a text
+         *
+         * @throws \Exception
+         * @param $text_id
+         * @param $language_code
+         * @param $group_id
+         * @return mixed
+         */
+        public function TextStatus($text_id, $language_code, $group_id = null) {
+            return $this->CallApi(__FUNCTION__, self::HTTP_GET, array('text_id' => $text_id, 'language' => $language_code, 'group_id' => $group_id));
+        }
     }
 }
