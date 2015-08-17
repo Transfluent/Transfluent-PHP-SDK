@@ -102,16 +102,12 @@ namespace Transfluent {
                 case self::HTTP_POST:
                     curl_setopt($curl_handle, CURLOPT_POST, TRUE);
                     if (!empty($payload)) {
-                        if ($api_version == 'v3') {
-                            $json_payload = json_encode($payload);
-                            curl_setopt($curl_handle, CURLOPT_POSTFIELDS, $json_payload);
-                            curl_setopt($curl_handle, CURLOPT_HTTPHEADER, array(
-                                    'Content-Type: application/json',
-                                    'Content-Length: ' . strlen($json_payload))
-                            );
-                        } else {
-                            curl_setopt($curl_handle, CURLOPT_POSTFIELDS, $payload);
-                        }
+                        $json_payload = json_encode($payload);
+                        curl_setopt($curl_handle, CURLOPT_POSTFIELDS, $json_payload);
+                        curl_setopt($curl_handle, CURLOPT_HTTPHEADER, array(
+                                'Content-Type: application/json',
+                                'Content-Length: ' . strlen($json_payload))
+                        );
                     }
                     break;
                 default:
@@ -127,8 +123,12 @@ namespace Transfluent {
             if (!$response) {
                 throw new \Exception('Failed to connect with Transfluent\'s API. cURL error: ' . curl_error($curl_handle));
             }
-            if ($method == 'FileRead') {
+            if ($method_name == 'FileRead') {
                 // Note! /file/read/ returns file data
+                $http_code = curl_getinfo($curl_handle, CURLINFO_HTTP_CODE);
+                if ($http_code != 200) {
+                    throw new \Exception('Could not retrieve the file! Error: ' . $response);
+                }
                 return $response;
             }
             $response_obj = json_decode($response, true);
@@ -169,11 +169,11 @@ namespace Transfluent {
          * @return mixed
          */
         public function Languages() {
-            return $this->Request(__FUNCTION__);
+            return $this->Request(__FUNCTION__, self::HTTP_GET, array(), 'v3');
         }
 
         /**
-         * /file/status/ requires token, use CallApi-method which automatically handles token&authentication issues
+         * Retrieve translation status of a file
          *
          * @throws \Exception
          * @param $identifier
@@ -209,7 +209,7 @@ namespace Transfluent {
             }
             $file_content = base64_encode(file_get_contents($file_name));
 
-            $response = $this->CallApi(__FUNCTION__, 'POST', array('identifier' => $identifier, 'language' => $language, 'format' => $format, 'content' => $file_content, 'type' => $type));
+            $response = $this->CallApi(__FUNCTION__, self::HTTP_POST, array('identifier' => $identifier, 'language' => $language, 'format' => $format, 'content' => $file_content, 'type' => $type));
             if (!$response['word_count']) {
                 throw new \Exception('Response does not comply expected form!');
             }
