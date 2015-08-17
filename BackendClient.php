@@ -272,5 +272,46 @@ namespace Transfluent {
             }
             return $response;
         }
+
+        /**
+         * Save one or more texts (identified by a key)
+         *
+         * @param string $group_id
+         * @param $language_code
+         * @param $texts
+         * @return mixed
+         * @throws \Exception
+         */
+        public function Texts($group_id = '', $language_code, $texts) {
+            if (!is_array($texts) || empty($texts)) {
+                throw new \Exception('Texts MUST be provided as key-value array!');
+            }
+            foreach ($texts AS $key => $value) {
+                if (is_null($value) || is_array($value)) {
+                    throw new \Exception('Texts MUST be provided as key-value array!');
+                }
+            }
+            $response = $this->CallApi(__FUNCTION__, 'POST',
+                array(
+                    'group_id' => $group_id,
+                    'language' => $language_code,
+                    'texts' => $texts
+                )
+            );
+            return $response;
+        }
+
+        /**
+         * Retrieve translated text
+         *
+         * @throws \Exception
+         * @param $text_id
+         * @param $language_code
+         * @param $group_id
+         * @return mixed
+         */
+        public function Text($text_id, $language_code, $group_id = null) {
+            return $this->CallApi(__FUNCTION__, self::HTTP_GET, array('text_id' => $text_id, 'language' => $language_code, 'group_id' => $group_id));
+        }
     }
 }
