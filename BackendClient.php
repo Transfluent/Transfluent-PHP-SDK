@@ -251,10 +251,11 @@ namespace Transfluent {
          * @param string $comment - Context comment or further information to the translator
          * @param string $callback_url - A callback URL which will receive a GET request when translation is completed
          * @param $level - Translation level
+         * @param $callbacks - An array of event callbacks, e.g. array("processing" => "http://example.org/my-processing-callback")
          * @return array
          * @throws \Exception
          */
-        public function FileTranslate($identifier, $language, array $target_languages, $comment = '', $callback_url = '', $level = self::LEVEL_BUSINESS) {
+        public function FileTranslate($identifier, $language, array $target_languages, $comment = '', $callback_url = '', $level = self::LEVEL_BUSINESS, $callbacks = null) {
             if (!is_array($target_languages)) {
                 throw new \Exception('Target languages MUST be provided as an array!');
             }
@@ -266,7 +267,17 @@ namespace Transfluent {
                 throw new \Exception('Level MUST be provided!');
             }
 
-            $response = $this->CallApi(__FUNCTION__, 'POST', array('identifier' => $identifier, 'language' => $language, 'target_languages' => json_encode($target_languages), 'comment' => $comment, 'callback_url' => $callback_url, 'level' => $level));
+            $payload = array('identifier' => $identifier, 'language' => $language, 'target_languages' => json_encode($target_languages), 'comment' => $comment, 'callback_url' => $callback_url, 'level' => $level);
+            if (!is_null($callbacks)) {
+                $payload['_callbacks'] = $callbacks;
+            }
+            $response = $this->CallApi(__FUNCTION__, 'POST', $payload);
+            if (isset($payload['_callbacks']['processing'])) {
+                if (!mb_substr_count($response, 'processing callback will be sent to')) {
+                    throw new \Exception('Response does not comply expected form!');
+                }
+                return $response;
+            }
             if (!$response['word_count']) {
                 throw new \Exception('Response does not comply expected form!');
             }
