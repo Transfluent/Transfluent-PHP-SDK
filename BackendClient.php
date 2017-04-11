@@ -252,10 +252,11 @@ namespace Transfluent {
          * @param string $callback_url - A callback URL which will receive a GET request when translation is completed
          * @param $level - Translation level
          * @param $callbacks - An array of event callbacks, e.g. array("processing" => "http://example.org/my-processing-callback")
+         * @param $file_name - File name to read latest content for the master file. Please note that calling FileSave() is necessary to create a new file, this parameter can be used to update the file before translation.
          * @return array
          * @throws \Exception
          */
-        public function FileTranslate($identifier, $language, array $target_languages, $comment = '', $callback_url = '', $level = self::LEVEL_BUSINESS, $callbacks = null) {
+        public function FileTranslate($identifier, $language, array $target_languages, $comment = '', $callback_url = '', $level = self::LEVEL_BUSINESS, $callbacks = null, $file_name = null) {
             if (!is_array($target_languages)) {
                 throw new \Exception('Target languages MUST be provided as an array!');
             }
@@ -270,6 +271,9 @@ namespace Transfluent {
             $payload = array('identifier' => $identifier, 'language' => $language, 'target_languages' => json_encode($target_languages), 'comment' => $comment, 'callback_url' => $callback_url, 'level' => $level);
             if (!is_null($callbacks)) {
                 $payload['_callbacks'] = $callbacks;
+            }
+            if ($file_name && is_file($file_name)) {
+                $payload['content'] = base64_encode(file_get_contents($file_name));
             }
             $response = $this->CallApi(__FUNCTION__, 'POST', $payload);
             if (isset($payload['_callbacks']['processing'])) {
