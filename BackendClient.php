@@ -211,37 +211,41 @@ namespace Transfluent {
             return $response['progress'];
         }
 
-        private function FileSave($identifier, $language, $format, $file_name, $type) {
+        private function FileSave($identifier, $language, $format, $file_name, $type, $save_translations_only = false) {
             if (!is_file($file_name)) {
                 throw new \Exception('File not found!');
             }
             $file_content = base64_encode(file_get_contents($file_name));
 
-            $response = $this->CallApi(__FUNCTION__, self::HTTP_POST, array('identifier' => $identifier, 'language' => $language, 'format' => $format, 'content' => $file_content, 'type' => $type));
+            $payload = array('identifier' => $identifier, 'language' => $language, 'format' => $format, 'content' => $file_content, 'type' => $type);
+            if ($save_translations_only) {
+                $payload['save_only_data'] = 'on';
+            }
+            $response = $this->CallApi(__FUNCTION__, self::HTTP_POST, $payload);
             if (!$response['word_count']) {
                 throw new \Exception('Response does not comply expected form!');
             }
             return $response;
         }
 
-        public function SaveMooToolsLocaleFile($identifier, $language, $file) {
-            return $this->FileSave($identifier, $language, 'UTF-8', $file, 'MooTools-locale');
+        public function SaveMooToolsLocaleFile($identifier, $language, $file, $save_translations_only = false) {
+            return $this->FileSave($identifier, $language, 'UTF-8', $file, 'MooTools-locale', $save_translations_only);
         }
 
-        public function SaveIosStringsFile($identifier, $language, $file) {
-            return $this->FileSave($identifier, $language, 'UTF-16', $file, 'iOS-strings');
+        public function SaveIosStringsFile($identifier, $language, $file, $save_translations_only = false) {
+            return $this->FileSave($identifier, $language, 'UTF-16', $file, 'iOS-strings', $save_translations_only);
         }
 
-        public function SaveAndroidStringsFile($identifier, $language, $file) {
-            return $this->FileSave($identifier, $language, 'UTF-8', $file, 'Android-strings');
+        public function SaveAndroidStringsFile($identifier, $language, $file, $save_translations_only = false) {
+            return $this->FileSave($identifier, $language, 'UTF-8', $file, 'Android-strings', $save_translations_only);
         }
 
-        public function SaveAndroidArraysFile($identifier, $language, $file) {
-            return $this->FileSave($identifier, $language, 'UTF-8', $file, 'Android-arrays');
+        public function SaveAndroidArraysFile($identifier, $language, $file, $save_translations_only = false) {
+            return $this->FileSave($identifier, $language, 'UTF-8', $file, 'Android-arrays', $save_translations_only);
         }
 
-        public function SaveJsonFile($identifier, $language, $file) {
-            return $this->FileSave($identifier, $language, 'UTF-8', $file, 'json-file');
+        public function SaveJsonFile($identifier, $language, $file, $save_translations_only = false) {
+            return $this->FileSave($identifier, $language, 'UTF-8', $file, 'json-file', $save_translations_only);
         }
 
         /**
