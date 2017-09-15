@@ -82,6 +82,8 @@ namespace Transfluent {
                 case 'v3':
                     $api_url = self::$API_V3_URL;
                     break;
+                default:
+                    throw new \Exception('API version must be defined!');
             }
             $uri = $this->UriFromMethod($method_name, $api_version);
 
