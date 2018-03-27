@@ -1,7 +1,7 @@
 Transfluent PHP SDK
 ==============================
 
-  * Version: 2.0
+  * Version: 2.1
   * Requires: PHP 5.3 or newer, cURL-extension for PHP
   * API documentation: http://api.transfluent.com/
 

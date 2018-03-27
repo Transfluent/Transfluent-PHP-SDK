@@ -2,16 +2,20 @@
 
 namespace Transfluent {
     /**
-     * Transfluent Backend API client
-     * Version 2.0
+     * Transfluent API client
+     * Version 2.1
      * @see https://github.com/Transfluent/Transfluent-Backend-API-client
      */
     class BackendClient {
         const HTTP_GET = 'GET';
         const HTTP_POST = 'POST';
+        const HTTP_PUT = 'PUT';
 
-        const LEVEL_ECONOMY = 'economy';
-        const LEVEL_BUSINESS = 'business';
+        //const LEVEL_ECONOMY = 'economy'; // @deprecated since 2.1, service level discontinued
+        //const LEVEL_BUSINESS = 'business'; // @deprecated since 2.1, use LEVEL_TRANSLATION instead
+        const LEVEL_TRANSLATION = 'translation';
+        const LEVEL_TRANSLATION_AND_PROOF_READING = 'translation+proof-reading';
+        const LEVEL_EXPERT_TRANSLATION = 'expert';
 
         static $API_URL;
         static $API_V3_URL;
@@ -55,6 +59,11 @@ namespace Transfluent {
             return $this->Request($method_name, $method, $payload);
         }
 
+        /**
+         * To avoid storing account credentials, generate / request an API token and use SetToken() to use it
+         *
+         * @param $token
+         */
         public function SetToken($token) {
             $this->token = $token;
         }
@@ -72,6 +81,23 @@ namespace Transfluent {
                 throw new \Exception('Could not authenticate with API!');
             }
             $this->token = $response;
+        }
+
+        /**
+         * @param $email
+         * @param bool $accept_terms_of_service
+         * @return string - An API token to access the newly created account
+         * @throws \Exception
+         */
+        public function CreateAccount($email, $accept_terms_of_service = false) {
+            if (!$accept_terms_of_service) {
+                throw new \Exception('You must accept terms of service to create an account');
+            }
+            $response = $this->Request(__FUNCTION__, 'POST', array('email' => $email, 'terms' => 'ok'));
+            if (!$response) {
+                throw new \Exception('Could not create an account!');
+            }
+            return $response['token'];
         }
 
         private function Request($method_name, $method = self::HTTP_GET, $payload = array(), $api_version = 'v2') {
@@ -156,7 +182,7 @@ namespace Transfluent {
             }
             // v2 Response processing
             if ($response_obj['status'] == 'ERROR') {
-                throw new \Exception('API returned an error #' . $response_obj['error']['type'] . ': ' . $response_obj['error']['message'] . '. Error description: ' . $response_obj['response']);
+                throw new \Exception('API returned an error #' . $response_obj['error']['type'] . ': ' . $response_obj['error']['message'] . '. Error description: ' . @$response_obj['response']);
             }
             if ($response_obj['status'] != 'OK') {
                 throw new \Exception('API returned unexpected response: ' . $response);
@@ -221,7 +247,7 @@ namespace Transfluent {
 
             $payload = array('identifier' => $identifier, 'language' => $language, 'format' => $format, 'content' => $file_content, 'type' => $type);
             if ($save_translations_only) {
-                $payload['save_only_data'] = 'on';
+                $payload['master'] = 'no';
             }
             $response = $this->CallApi(__FUNCTION__, self::HTTP_POST, $payload);
             if (!$response['word_count']) {
@@ -262,7 +288,7 @@ namespace Transfluent {
          * @return array
          * @throws \Exception
          */
-        public function FileTranslate($identifier, $language, array $target_languages, $comment = '', $callback_url = '', $level = self::LEVEL_BUSINESS, $callbacks = null, $file_name = null) {
+        public function FileTranslate($identifier, $language, array $target_languages, $comment = '', $callback_url = '', $level = self::LEVEL_TRANSLATION, $callbacks = null, $file_name = null) {
             if (!is_array($target_languages)) {
                 throw new \Exception('Target languages MUST be provided as an array!');
             }
@@ -322,7 +348,7 @@ namespace Transfluent {
             return $response;
         }
 
-        public function TextsTranslate($group_id = '', $language_code, $text_ids, $target_languages, $level = self::LEVEL_BUSINESS, $comment = '', $callback_url = null) {
+        public function TextsTranslate($group_id = '', $language_code, $text_ids, $target_languages, $level = self::LEVEL_TRANSLATION, $comment = '', $callback_url = null) {
             if (!is_array($text_ids) || empty($text_ids)) {
                 throw new \Exception('Text ids to translate MUST be provided!');
             }
