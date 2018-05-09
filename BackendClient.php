@@ -3,7 +3,7 @@
 namespace Transfluent {
     /**
      * Transfluent API client
-     * Version 2.1
+     * Version 2.11
      * @see https://github.com/Transfluent/Transfluent-Backend-API-client
      */
     class BackendClient {
@@ -30,8 +30,8 @@ namespace Transfluent {
             $this->email = $email;
             $this->password = $password;
             if ($in_sandbox_mode) {
-                self::$API_URL = 'https://public-api.local.dev/v2/';
-                self::$API_V3_URL = 'https://public-api.local.dev/';
+                self::$API_URL = 'https://demo.transfluent.com/v2/';
+                self::$API_V3_URL = 'https://demo.transfluent.com/'; // @todo: Need to have API-v3 instance running on the box..
                 $this->_sandbox_mode = true;
             } else {
                 self::$API_URL = 'https://transfluent.com/v2/';
@@ -274,6 +274,10 @@ namespace Transfluent {
 
         public function SaveJsonFile($identifier, $language, $file, $save_translations_only = false) {
             return $this->FileSave($identifier, $language, 'UTF-8', $file, 'json-file', $save_translations_only);
+        }
+
+        public function SaveYamlFile($identifier, $language, $file, $save_translations_only = false) {
+            return $this->FileSave($identifier, $language, 'UTF-8', $file, 'YAML-file', $save_translations_only);
         }
 
         /**
