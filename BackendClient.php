@@ -3,19 +3,20 @@
 namespace Transfluent {
     /**
      * Transfluent API client
-     * Version 2.11
+     * Version 2.2
      * @see https://github.com/Transfluent/Transfluent-Backend-API-client
      */
     class BackendClient {
         const HTTP_GET = 'GET';
         const HTTP_POST = 'POST';
         const HTTP_PUT = 'PUT';
+        const HTTP_DELETE = 'DELETE';
 
-        //const LEVEL_ECONOMY = 'economy'; // @deprecated since 2.1, service level discontinued
-        //const LEVEL_BUSINESS = 'business'; // @deprecated since 2.1, use LEVEL_TRANSLATION instead
         const LEVEL_TRANSLATION = 'translation';
         const LEVEL_TRANSLATION_AND_PROOF_READING = 'translation+proof-reading';
         const LEVEL_EXPERT_TRANSLATION = 'expert';
+        const LEVEL_EXPERT_TRANSLATION_AND_PROOF_READING = 'expert+review';
+        const LEVEL_MACHINE_TRANSLATION = 'machine';
 
         static $API_URL;
         static $API_V3_URL;
@@ -31,7 +32,7 @@ namespace Transfluent {
             $this->password = $password;
             if ($in_sandbox_mode) {
                 self::$API_URL = 'https://demo.transfluent.com/v2/';
-                self::$API_V3_URL = 'https://demo.transfluent.com/'; // @todo: Need to have API-v3 instance running on the box..
+                self::$API_V3_URL = 'https://demo.transfluent.com/';
                 $this->_sandbox_mode = true;
             } else {
                 self::$API_URL = 'https://transfluent.com/v2/';
