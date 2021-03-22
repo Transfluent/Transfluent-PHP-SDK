@@ -1,5 +1,5 @@
 {
-  "name": "transfluent/Transfluent-PHP-SDK",
+  "name": "transfluent/transfluent-php-sdk",
   "description": "SDK for PHP to use Transfluent API",
   "minimum-stability": "stable",
   "license": "proprietary",
