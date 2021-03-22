@@ -1,0 +1,14 @@
+{
+  "name": "transfluent/Transfluent-PHP-SDK",
+  "description": "SDK for PHP to use Transfluent API",
+  "minimum-stability": "stable",
+  "license": "proprietary",
+  "authors": [
+    {
+      "name": "Transfluent Ltd",
+      "email": "coders@transfluent.com"
+    }
+  ],
+  "require": {
+  }
+}
