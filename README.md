@@ -5,6 +5,10 @@ Transfluent PHP SDK
   * Requires: PHP 5.3 or newer, cURL-extension for PHP
   * API documentation: http://api.transfluent.com/
 
+### Installation
+Using Composer: `composer require transfluent/transfluent-php-sdk`
+
+
 ### Quick overview using code examples how to order translations for a resource file ###
 
 Example how to order translations for a resource file:
